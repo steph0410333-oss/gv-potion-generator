@@ -34,17 +34,19 @@ Participant reflection:
 2. I know I can... ${can}
 3. What I take from this journey is... ${take}
 
-Create a result that is warm, reflective, concise, and slightly magical but not childish.
+Create a result that is warm, reflective, concise, magical, and slightly literary, but not childish.
 Do not invent growth, traits, or experiences that are not supported by the participant's words.
 
 Return ONLY valid JSON with exactly these keys:
 {
   "potion_name": "English potion name, 2-5 words",
+  "potion_name_zh": "Traditional Chinese potion name, 4-10 Chinese characters, elegant and magical",
   "potion_effect": "1-2 concise sentences in Traditional Chinese",
   "key_ingredients": ["3 short phrases"],
   "gv_values": ["1 or 2 values selected ONLY from: Cross-Cultural Experience, Develop Yourself, Contribute to the Sustainable Development Goals"]
 }
 
+The Chinese potion name should not be a literal translation only. It should sound refined, magical, and poetic.
 Choose GV values only when supported by the reflection.
 If the reflection does not clearly mention SDGs or social impact, do not force that value.
 `;
@@ -64,8 +66,8 @@ If the reflection does not clearly mention SDGs or social impact, do not force t
           ],
           generationConfig: {
             responseMimeType: 'application/json',
-            temperature: 0.8,
-            maxOutputTokens: 500
+            temperature: 0.85,
+            maxOutputTokens: 700
           }
         })
       }
@@ -104,7 +106,8 @@ If the reflection does not clearly mention SDGs or social impact, do not force t
     ];
 
     const output = {
-      potion_name: String(parsed.potion_name || 'Journey Distillation Potion'),
+      potion_name: String(parsed.potion_name || 'Journey Distillation'),
+      potion_name_zh: String(parsed.potion_name_zh || '旅程釀成之藥'),
       potion_effect: String(parsed.potion_effect || ''),
       key_ingredients: Array.isArray(parsed.key_ingredients)
         ? parsed.key_ingredients.slice(0, 3).map(String)
@@ -127,5 +130,3 @@ If the reflection does not clearly mention SDGs or social impact, do not force t
     return res.status(500).json({ error: 'Unexpected server error' });
   }
 }
-
-// deployment trigger: 2026-09-11
