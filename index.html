@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>GV Potion Generator</title>
+  <style>
+    :root{--bg:#0c1020;--panel:#171b2e;--panel2:#111525;--text:#f7f5ef;--muted:#b9bfd4;--gold:#e0bb68;--line:#343a59;--purple:#6f5dd7}
+    *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;background:radial-gradient(circle at 20% 0%,rgba(111,93,215,.25),transparent 28%),radial-gradient(circle at 90% 20%,rgba(224,187,104,.12),transparent 24%),linear-gradient(180deg,#0b0f1c,#101525 55%,#0c1020);color:var(--text);min-height:100vh}.wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px}.hero,.card,.result{background:rgba(23,27,46,.9);border:1px solid var(--line);border-radius:22px;box-shadow:0 16px 40px rgba(0,0,0,.22)}.hero{padding:22px}.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--gold);font-weight:800}h1{font-size:30px;line-height:1.15;margin:8px 0 10px}h2{font-size:20px;margin:0 0 10px}p{line-height:1.7;margin:8px 0}.muted{color:var(--muted)}.card{padding:18px;margin-top:14px}label{display:block;font-weight:800;margin:16px 0 7px}textarea{width:100%;min-height:100px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);color:var(--text);padding:13px 14px;font-size:16px;line-height:1.5;resize:vertical;outline:none}textarea:focus{border-color:#7166d8;box-shadow:0 0 0 3px rgba(113,102,216,.12)}button{width:100%;border:0;border-radius:15px;padding:15px 16px;font-size:16px;font-weight:900;background:linear-gradient(90deg,#e0bb68,#f3d58d);color:#251d0e;margin-top:16px}button:disabled{opacity:.55}.hint{font-size:13px;color:var(--muted);margin-top:5px}.loading{display:none;text-align:center;padding:28px 14px}.loading.show{display:block}.cauldron{font-size:46px;animation:bob 1.2s infinite ease-in-out}@keyframes bob{50%{transform:translateY(-5px)}}.result{padding:22px;margin-top:14px;display:none}.result.show{display:block}.potion-icon{font-size:54px;text-align:center}.potion-name{font-size:28px;text-align:center;margin:8px 0}.effect{font-size:17px;line-height:1.7;text-align:center;color:#eceaf4}.section-title{font-weight:900;margin:18px 0 8px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{display:inline-block;padding:8px 10px;border-radius:999px;background:#111528;border:1px solid var(--line);color:#ececf5;font-size:14px}.error{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;background:#2a1520;border:1px solid #5d2b3d;color:#ffd7e1;line-height:1.5}.error.show{display:block}.footer{text-align:center;color:#848ba5;font-size:12px;margin-top:24px}.copy{background:#242b49;color:#fff;border:1px solid var(--line)}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">GV RETURNEE REFLECTION</div>
+      <h1>🧪 Brew Your GV Potion</h1>
+      <p>把你在旅程中整理出的改變與收穫放進魔藥鍋，讓 AI 幫你調製一瓶屬於你的 GV Potion。</p>
+      <p class="muted">請依照 Step 2 的三個問題輸入答案。</p>
+    </section>
+    <section class="card">
+      <h2>Step 2｜What Did They Become?</h2>
+      <label for="more">Now I am more...</label>
+      <textarea id="more" placeholder="現在的我，比出發前更..."></textarea>
+      <label for="can">I know I can...</label>
+      <textarea id="can" placeholder="我現在更知道自己可以..."></textarea>
+      <label for="take">What I take from this journey is...</label>
+      <textarea id="take" placeholder="這趟旅程最後留給我的，是..."></textarea>
+      <div class="hint">不需要寫得很漂亮，直接寫你真正想到的內容就可以。</div>
+      <button id="brewBtn">Brew My GV Potion ✨</button>
+      <div id="error" class="error"></div>
+    </section>
+    <section id="loading" class="card loading">
+      <div class="cauldron">⚗️</div>
+      <h2>Brewing your potion...</h2>
+      <p class="muted">AI 正在從你的 reflection 中萃取魔藥。</p>
+    </section>
+    <section id="result" class="result">
+      <div class="potion-icon">🧪</div>
+      <div class="eyebrow" style="text-align:center">YOUR GV POTION</div>
+      <h1 id="potionName" class="potion-name"></h1>
+      <p id="potionEffect" class="effect"></p>
+      <div class="section-title">Key Ingredients</div>
+      <div id="ingredients" class="chips"></div>
+      <div class="section-title">GV Value Connection</div>
+      <div id="values" class="chips"></div>
+      <button id="copyBtn" class="copy">複製分享內容</button>
+    </section>
+    <div class="footer">Global Volunteer Reflection • AI-assisted potion naming</div>
+  </main>
+<script>
+const brewBtn=document.getElementById('brewBtn'),loading=document.getElementById('loading'),result=document.getElementById('result'),errorBox=document.getElementById('error');function showError(msg){errorBox.textContent=msg;errorBox.classList.add('show')}function clearError(){errorBox.textContent='';errorBox.classList.remove('show')}brewBtn.addEventListener('click',async()=>{clearError();result.classList.remove('show');const payload={more:document.getElementById('more').value.trim(),can:document.getElementById('can').value.trim(),take:document.getElementById('take').value.trim()};if(!payload.more||!payload.can||!payload.take){showError('請先完成三個問題，再開始調製魔藥。');return}brewBtn.disabled=true;loading.classList.add('show');try{const res=await fetch('/api/brew',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await res.json();if(!res.ok)throw new Error(data.error||'生成失敗，請稍後再試。');document.getElementById('potionName').textContent=data.potion_name;document.getElementById('potionEffect').textContent=data.potion_effect;document.getElementById('ingredients').innerHTML=(data.key_ingredients||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('');document.getElementById('values').innerHTML=(data.gv_values||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('');result.classList.add('show');result.scrollIntoView({behavior:'smooth',block:'start'})}catch(err){showError(err.message||'生成失敗，請稍後再試。')}finally{loading.classList.remove('show');brewBtn.disabled=false}});document.getElementById('copyBtn').addEventListener('click',async()=>{const text=`My GV Potion: ${document.getElementById('potionName').textContent}\nPotion Effect: ${document.getElementById('potionEffect').textContent}\nGV Value: ${[...document.querySelectorAll('#values .chip')].map(x=>x.textContent).join(', ')}`;try{await navigator.clipboard.writeText(text);alert('已複製，可以直接拿去分享！')}catch{alert(text)}});function escapeHtml(str){return String(str).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]))}
+</script>
+</body>
+</html>
