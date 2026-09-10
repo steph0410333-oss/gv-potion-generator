@@ -8,13 +8,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing reflection fields' });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'OPENAI_API_KEY is not configured' });
+    return res.status(500).json({ error: 'GEMINI_API_KEY is not configured' });
   }
 
   const prompt = `
-You are generating a reflective "GV Potion" for a Global Volunteer returnee activity.
+You are generating a reflective "GV Potion" for an AIESEC Global Volunteer returnee reflection activity.
 
 Participant reflection:
 1. Now I am more... ${more}
@@ -24,7 +24,7 @@ Participant reflection:
 Create a result that is warm, reflective, concise, and slightly magical but not childish.
 Do not invent growth, traits, or experiences that are not supported by the participant's words.
 
-Return ONLY valid JSON, with no markdown and no code fences:
+Return ONLY valid JSON with exactly these keys:
 {
   "potion_name": "English potion name, 2-5 words",
   "potion_effect": "1-2 concise sentences in Traditional Chinese",
@@ -37,35 +37,45 @@ If the reflection does not clearly mention SDGs or social impact, do not force t
 `;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-5.6-luna',
-        input: prompt
-      })
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.8,
+            maxOutputTokens: 500
+          }
+        })
+      }
+    );
 
     const data = await response.json();
+
     if (!response.ok) {
-      console.error(data);
+      console.error('Gemini API error:', data);
       return res.status(500).json({ error: 'AI generation failed' });
     }
 
-    let text = data.output_text || '';
-    if (!text && Array.isArray(data.output)) {
-      for (const item of data.output) {
-        if (!Array.isArray(item.content)) continue;
-        for (const c of item.content) {
-          if (c.type === 'output_text' && c.text) text += c.text;
-        }
-      }
+    let text = data?.candidates?.[0]?.content?.parts
+      ?.map(part => part.text || '')
+      .join('')
+      .trim();
+
+    if (!text) {
+      console.error('No Gemini output:', data);
+      return res.status(500).json({ error: 'AI returned an empty response' });
     }
 
-    text = text.trim()
+    text = text
       .replace(/^```json\s*/i, '')
       .replace(/^```\s*/i, '')
       .replace(/\s*```$/, '');
