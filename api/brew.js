@@ -8,9 +8,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing reflection fields' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.google_api ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
   if (!apiKey) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY is not configured' });
+    return res.status(500).json({
+      error: 'Gemini API key is not configured',
+      diagnostics: {
+        GEMINI_API_KEY: Boolean(process.env.GEMINI_API_KEY),
+        google_api: Boolean(process.env.google_api),
+        GOOGLE_API_KEY: Boolean(process.env.GOOGLE_API_KEY),
+        GOOGLE_GENERATIVE_AI_API_KEY: Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+      }
+    });
   }
 
   const prompt = `
@@ -62,7 +75,9 @@ If the reflection does not clearly mention SDGs or social impact, do not force t
 
     if (!response.ok) {
       console.error('Gemini API error:', data);
-      return res.status(500).json({ error: 'AI generation failed' });
+      return res.status(500).json({
+        error: data?.error?.message || 'AI generation failed'
+      });
     }
 
     let text = data?.candidates?.[0]?.content?.parts
